@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signIn, signUp, signInWithGoogle, auth } from '../../firebase/auth';
 import { getRedirectResult } from 'firebase/auth';
+import logo from '../../assets/images/logo.PNG';
 import '../../css/Auth.css';
 
 const Login = () => {
@@ -70,8 +71,8 @@ const Login = () => {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <img src="/src/assets/images/logo.PNG" alt="LeafLens AI Logo" className="auth-logo" />
-      
+          <img src={logo} alt="LeafLens AI Logo" className="auth-logo" />
+        
         
         {error && <div className="auth-error">{error}</div>}
         
