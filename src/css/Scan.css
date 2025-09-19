@@ -1,0 +1,193 @@
+.scan-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 5rem;
+}
+
+.scan-container h1 {
+  text-align: center;
+  color: #2c5f2d;
+  margin-bottom: 2rem;
+}
+
+.scan-options {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.scan-button,
+.upload-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background-color: #2c5f2d;
+  color: white;
+  font-weight: 500;
+}
+
+.scan-button:hover,
+.upload-button:hover {
+  background-color: #224b23;
+  transform: translateY(-2px);
+}
+
+.camera-container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+  aspect-ratio: 16/9;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.capture-button {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #2c5f2d;
+  color: white;
+  border: none;
+  font-weight: 500;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 90%;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.captured-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
+
+.plant-info h2 {
+  color: #2c5f2d;
+  margin-bottom: 0.5rem;
+}
+
+.scientific-name {
+  color: #666;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.description {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.care-guide,
+.fun-facts {
+  margin-bottom: 1.5rem;
+}
+
+.care-guide h3,
+.fun-facts h3 {
+  color: #2c5f2d;
+  margin-bottom: 0.5rem;
+}
+
+.care-guide ul,
+.fun-facts ul {
+  list-style: none;
+  padding: 0;
+}
+
+.care-guide li,
+.fun-facts li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.care-guide li:before,
+.fun-facts li:before {
+  content: "•";
+  color: #2c5f2d;
+  position: absolute;
+  left: 0;
+}
+
+.favorite-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #2c5f2d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.favorite-button:hover {
+  background-color: #224b23;
+}
+
+@media (max-width: 768px) {
+  .scan-container {
+    padding: 1rem;
+    padding-top: 4rem;
+  }
+
+  .scan-options {
+    flex-direction: column;
+  }
+
+  .modal-content {
+    padding: 1rem;
+    width: 95%;
+  }
+}
