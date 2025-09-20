@@ -64,10 +64,10 @@ class WeatherService {
             await this.updateLocation();
         }
 
-        // If we still don't have location after trying to update, return null
+        // If we still don't have location after trying to update, use a default location
         if (!this.currentLocation) {
-            console.warn('Cannot get weather data: location not available');
-            return null;
+            console.warn('Location not available, using default location (New York)');
+            this.currentLocation = { lat: 40.7128, lon: -74.0060 }; // New York City as default
         }
 
         try {
@@ -93,6 +93,9 @@ class WeatherService {
                 humidity: data.main.humidity,
                 windSpeed: data.wind.speed,
                 icon: this.getWeatherIcon(data.weather[0].icon),
+                location: data.name,
+                country: data.sys.country,
+                isDefaultLocation: !this.currentLocation || (this.currentLocation.lat === 40.7128 && this.currentLocation.lon === -74.0060),
                 dedupeKey
             };
         } catch (error) {
@@ -164,13 +167,28 @@ class WeatherService {
         }
     }
 
+    // Method to manually set location
+    setLocation(lat, lon) {
+        this.currentLocation = { lat, lon };
+        console.log('Location manually set to:', this.currentLocation);
+        // Trigger immediate weather update
+        this.getWeather().then(weatherData => {
+            if (weatherData) {
+                this.notifyWeatherUpdate(weatherData);
+            }
+        }).catch(error => {
+            console.warn('Failed to get weather for manual location:', error.message);
+        });
+    }
+
     notifyWeatherUpdate(weatherData) {
         // Pass dedupe key into notification to avoid duplicates across reloads within the same hour
+        const locationText = weatherData.isDefaultLocation ? ' (Default Location)' : ` in ${weatherData.location}`;
         notificationService.addNotification({
             type: 'in-app',
             category: 'weather',
             title: 'Weather Update',
-            message: `Current weather: ${weatherData.condition}, ${weatherData.temperature}°C`,
+            message: `Current weather${locationText}: ${weatherData.condition}, ${weatherData.temperature}°C`,
             icon: '🌤️',
             data: weatherData,
             key: weatherData.dedupeKey
