@@ -27,6 +27,27 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Debug Firebase configuration in development
+if (import.meta.env.DEV) {
+  console.log('Firebase Config:', {
+    apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : 'MISSING',
+    authDomain: firebaseConfig.authDomain || 'MISSING',
+    projectId: firebaseConfig.projectId || 'MISSING',
+    storageBucket: firebaseConfig.storageBucket || 'MISSING',
+    messagingSenderId: firebaseConfig.messagingSenderId || 'MISSING',
+    appId: firebaseConfig.appId ? '***' + firebaseConfig.appId.slice(-4) : 'MISSING',
+    measurementId: firebaseConfig.measurementId || 'MISSING'
+  });
+}
+
+// Validate required Firebase configuration
+const requiredConfig = ['apiKey', 'authDomain', 'projectId', 'appId'];
+const missingConfig = requiredConfig.filter(key => !firebaseConfig[key]);
+if (missingConfig.length > 0) {
+  console.error('Missing Firebase configuration:', missingConfig);
+  throw new Error(`Missing required Firebase configuration: ${missingConfig.join(', ')}`);
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
