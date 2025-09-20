@@ -39,6 +39,13 @@ body.camera-mode .bottom-navbar {
   align-items: center;
 }
 
+.camera-controls-center {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Back Button */
 .back-btn {
   width: 40px;
@@ -226,6 +233,21 @@ body.camera-mode .bottom-navbar {
   backdrop-filter: blur(10px);
 }
 
+.camera-bottom-controls .camera-controls-left,
+.camera-bottom-controls .camera-controls-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.camera-bottom-controls .camera-controls-left {
+  justify-content: flex-start;
+}
+
+.camera-bottom-controls .camera-controls-right {
+  justify-content: flex-end;
+}
+
 .camera-controls-center {
   display: flex;
   align-items: center;
@@ -266,6 +288,11 @@ body.camera-mode .bottom-navbar {
   border-radius: 50%;
   background: #4CAF50;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
 }
 
 .capture-btn.active .capture-btn-inner {

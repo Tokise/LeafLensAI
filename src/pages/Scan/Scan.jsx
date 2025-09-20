@@ -251,6 +251,9 @@ const Scan = () => {
           >
             <FontAwesomeIcon icon={faArrowLeft} />
           </button>
+        </div>
+        
+        <div className="camera-controls-center">
           <button 
             className={`camera-control-btn ${flashMode !== 'off' ? 'active' : ''}`}
             onClick={toggleFlash}
@@ -276,13 +279,7 @@ const Scan = () => {
         </div>
         
         <div className="camera-controls-right">
-          <button 
-            className="camera-control-btn"
-            onClick={switchCamera}
-            title="Switch Camera"
-          >
-            <FontAwesomeIcon icon={faSyncAlt} />
-          </button>
+          {/* Empty for balance */}
         </div>
       </div>
 
@@ -340,14 +337,13 @@ const Scan = () => {
       {/* Bottom Controls */}
       <div className="camera-bottom-controls">
         <div className="camera-controls-left">
-          {lastCapturedImage && (
-            <button 
-              className="gallery-preview"
-              onClick={() => setCapturedImage(lastCapturedImage)}
-            >
-              <img src={lastCapturedImage} alt="Last captured" />
-            </button>
-          )}
+          <button 
+            className="camera-control-btn"
+            onClick={switchCamera}
+            title="Switch Camera"
+          >
+            <FontAwesomeIcon icon={faSyncAlt} />
+          </button>
         </div>
 
         <div className="camera-controls-center">
@@ -356,7 +352,9 @@ const Scan = () => {
             onClick={isCapturing ? captureImage : startCamera}
             disabled={!isSecure || !isCameraSupported}
           >
-            <div className="capture-btn-inner" />
+            <div className="capture-btn-inner">
+              <FontAwesomeIcon icon={faCamera} />
+            </div>
           </button>
         </div>
 
