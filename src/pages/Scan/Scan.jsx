@@ -10,6 +10,7 @@ const Scan = () => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [plantInfo, setPlantInfo] = useState(null);
+  const [showPermissionHelp, setShowPermissionHelp] = useState(false);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -26,14 +27,24 @@ const Scan = () => {
         throw new Error('Camera access is not supported in this browser.');
       }
 
-      // Request camera permission with better constraints
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
+      // Show permission request message
+      toast.loading('Requesting camera permission...', { duration: 2000 });
+
+      // Request camera permission with simpler constraints first
+      let stream;
+      try {
+        // Try with basic constraints first
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true
+        });
+      } catch (basicError) {
+        // If basic fails, try with environment camera
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment'
+          } 
+        });
+      }
       
       videoRef.current.srcObject = stream;
       streamRef.current = stream;
@@ -43,9 +54,12 @@ const Scan = () => {
       console.error('Error accessing camera:', error);
       
       let errorMessage = 'Unable to access camera. ';
+      let showInstructions = false;
       
       if (error.name === 'NotAllowedError') {
-        errorMessage += 'Please allow camera permissions in your browser settings and try again.';
+        errorMessage = 'Camera permission denied. ';
+        showInstructions = true;
+        setShowPermissionHelp(true);
       } else if (error.name === 'NotFoundError') {
         errorMessage += 'No camera found. Please connect a camera and try again.';
       } else if (error.name === 'NotReadableError') {
@@ -61,6 +75,20 @@ const Scan = () => {
       }
       
       toast.error(errorMessage);
+      
+      if (showInstructions) {
+        // Show detailed instructions for permission denied
+        setTimeout(() => {
+          toast.error('Click the camera icon in your browser\'s address bar to allow camera access', {
+            duration: 5000,
+            style: {
+              background: '#ff6b6b',
+              color: 'white',
+              fontSize: '14px'
+            }
+          });
+        }, 1000);
+      }
     }
   };
 
@@ -166,6 +194,25 @@ const Scan = () => {
       {!isSecure && (
         <div className="security-warning">
           <p>⚠️ Camera access requires a secure connection (HTTPS). Please use the upload option below.</p>
+        </div>
+      )}
+
+      {showPermissionHelp && (
+        <div className="permission-help">
+          <h3>🔒 Camera Permission Required</h3>
+          <p>To use the camera, please follow these steps:</p>
+          <ol>
+            <li>Look for a camera icon in your browser's address bar</li>
+            <li>Click on it and select "Allow" for camera access</li>
+            <li>Refresh the page and try again</li>
+          </ol>
+          <p><strong>Alternative:</strong> Use the "Upload Image" button below to select a photo from your device.</p>
+          <button 
+            className="close-help-button"
+            onClick={() => setShowPermissionHelp(false)}
+          >
+            Got it, close this
+          </button>
         </div>
       )}
       
