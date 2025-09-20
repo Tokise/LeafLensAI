@@ -9,6 +9,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1000;
+}
+
+/* Hide bottom navigation when in camera mode */
+body.camera-mode .bottom-navbar {
+  display: none !important;
 }
 
 /* Top Controls Bar */
@@ -30,6 +36,30 @@
 .camera-controls-right {
   display: flex;
   gap: 15px;
+  align-items: center;
+}
+
+/* Back Button */
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  margin-right: 10px;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .camera-control-btn {
@@ -56,6 +86,22 @@
 .camera-control-btn.active {
   background: #4CAF50;
   color: white;
+}
+
+/* Timer Text */
+.timer-text {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1;
 }
 
 /* Camera Modes */
@@ -142,6 +188,7 @@
   font-size: 64px;
   margin-bottom: 20px;
   opacity: 0.5;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .placeholder-icon p {

@@ -1,11 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faArrowLeft,
+  faBolt,
+  faTh,
+  faClock,
+  faSyncAlt,
+  faCamera,
+  faFolderOpen,
+  faTimes
+} from '@fortawesome/free-solid-svg-icons';
 import { addToFavorites } from '../../firebase/favorites';
 import { notificationService } from '../../utils/notificationService';
 import '../../css/Scan.css';
 
 const Scan = () => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -19,6 +32,14 @@ const Scan = () => {
   const [lastCapturedImage, setLastCapturedImage] = useState(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+
+  // Hide bottom navigation when in camera mode
+  useEffect(() => {
+    document.body.classList.add('camera-mode');
+    return () => {
+      document.body.classList.remove('camera-mode');
+    };
+  }, []);
 
   const startCamera = async () => {
     try {
@@ -123,12 +144,7 @@ const Scan = () => {
   };
 
   const getFlashIcon = () => {
-    switch (flashMode) {
-      case 'off': return '⚡';
-      case 'on': return '⚡';
-      case 'auto': return '⚡';
-      default: return '⚡';
-    }
+    return faBolt;
   };
 
   const getTimerText = () => {
@@ -229,25 +245,33 @@ const Scan = () => {
       <div className="camera-top-controls">
         <div className="camera-controls-left">
           <button 
+            className="back-btn"
+            onClick={() => navigate('/')}
+            title="Back"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} />
+          </button>
+          <button 
             className={`camera-control-btn ${flashMode !== 'off' ? 'active' : ''}`}
             onClick={toggleFlash}
             title={`Flash: ${flashMode}`}
           >
-            {getFlashIcon()}
+            <FontAwesomeIcon icon={getFlashIcon()} />
           </button>
           <button 
             className={`camera-control-btn ${showGrid ? 'active' : ''}`}
             onClick={toggleGrid}
             title="Grid Lines"
           >
-            #
+            <FontAwesomeIcon icon={faTh} />
           </button>
           <button 
             className={`camera-control-btn ${timer > 0 ? 'active' : ''}`}
             onClick={setTimerMode}
             title="Timer"
           >
-            {getTimerText()}
+            <FontAwesomeIcon icon={faClock} />
+            {timer > 0 && <span className="timer-text">{timer}</span>}
           </button>
         </div>
         
@@ -257,7 +281,7 @@ const Scan = () => {
             onClick={switchCamera}
             title="Switch Camera"
           >
-            🔄
+            <FontAwesomeIcon icon={faSyncAlt} />
           </button>
         </div>
       </div>
@@ -300,7 +324,9 @@ const Scan = () => {
           </>
         ) : (
           <div className="camera-placeholder">
-            <div className="placeholder-icon">📷</div>
+            <div className="placeholder-icon">
+              <FontAwesomeIcon icon={faCamera} />
+            </div>
             <p>Camera Ready</p>
             {!isSecure && (
               <div className="security-warning">
@@ -342,7 +368,7 @@ const Scan = () => {
               onChange={handleFileUpload}
               style={{ display: 'none' }}
             />
-            📁
+            <FontAwesomeIcon icon={faFolderOpen} />
           </label>
         </div>
       </div>
@@ -386,7 +412,7 @@ const Scan = () => {
               className="modal-close"
               onClick={() => setShowModal(false)}
             >
-              ×
+              <FontAwesomeIcon icon={faTimes} />
             </button>
             
             <div className="plant-info">
