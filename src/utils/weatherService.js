@@ -64,6 +64,12 @@ class WeatherService {
             await this.updateLocation();
         }
 
+        // If we still don't have location after trying to update, return null
+        if (!this.currentLocation) {
+            console.warn('Cannot get weather data: location not available');
+            return null;
+        }
+
         try {
             const response = await fetch(
                 `${WEATHER_API_BASE_URL}/weather?lat=${this.currentLocation.lat}&lon=${this.currentLocation.lon}&units=metric&appid=${WEATHER_API_KEY}`
@@ -129,14 +135,22 @@ class WeatherService {
         this.weatherUpdateInterval = setInterval(async () => {
             try {
                 const weatherData = await this.getWeather();
-                this.notifyWeatherUpdate(weatherData);
+                if (weatherData) {
+                    this.notifyWeatherUpdate(weatherData);
+                }
             } catch (error) {
                 console.error('Failed to update weather:', error);
             }
         }, 30 * 60 * 1000); // 30 minutes
 
         // Trigger initial update
-        this.getWeather().then(weatherData => this.notifyWeatherUpdate(weatherData));
+        this.getWeather().then(weatherData => {
+            if (weatherData) {
+                this.notifyWeatherUpdate(weatherData);
+            }
+        }).catch(error => {
+            console.warn('Initial weather update failed:', error.message);
+        });
     }
 
     stopWeatherUpdates() {
