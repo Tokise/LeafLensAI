@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { addToFavorites } from '../../firebase/favorites';
@@ -11,6 +11,12 @@ const Scan = () => {
   const [capturedImage, setCapturedImage] = useState(null);
   const [plantInfo, setPlantInfo] = useState(null);
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
+  const [cameraMode, setCameraMode] = useState('normal');
+  const [flashMode, setFlashMode] = useState('off');
+  const [showGrid, setShowGrid] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [facingMode, setFacingMode] = useState('environment');
+  const [lastCapturedImage, setLastCapturedImage] = useState(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -30,21 +36,14 @@ const Scan = () => {
       // Show permission request message
       toast.loading('Requesting camera permission...', { duration: 2000 });
 
-      // Request camera permission with simpler constraints first
-      let stream;
-      try {
-        // Try with basic constraints first
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: true
-        });
-      } catch (basicError) {
-        // If basic fails, try with environment camera
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment'
-          } 
-        });
-      }
+      // Request camera permission with current facing mode
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      });
       
       videoRef.current.srcObject = stream;
       streamRef.current = stream;
@@ -99,6 +98,43 @@ const Scan = () => {
     }
   };
 
+  const switchCamera = async () => {
+    if (isCapturing) {
+      stopCamera();
+      setFacingMode(facingMode === 'environment' ? 'user' : 'environment');
+      setTimeout(() => startCamera(), 100);
+    }
+  };
+
+  const toggleFlash = () => {
+    const modes = ['off', 'on', 'auto'];
+    const currentIndex = modes.indexOf(flashMode);
+    setFlashMode(modes[(currentIndex + 1) % modes.length]);
+  };
+
+  const toggleGrid = () => {
+    setShowGrid(!showGrid);
+  };
+
+  const setTimerMode = () => {
+    const timers = [0, 3, 5, 10];
+    const currentIndex = timers.indexOf(timer);
+    setTimer(timers[(currentIndex + 1) % timers.length]);
+  };
+
+  const getFlashIcon = () => {
+    switch (flashMode) {
+      case 'off': return '⚡';
+      case 'on': return '⚡';
+      case 'auto': return '⚡';
+      default: return '⚡';
+    }
+  };
+
+  const getTimerText = () => {
+    return timer === 0 ? 'Timer' : `${timer}s`;
+  };
+
   const captureImage = () => {
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
@@ -106,6 +142,7 @@ const Scan = () => {
     canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
     const image = canvas.toDataURL('image/jpeg');
     setCapturedImage(image);
+    setLastCapturedImage(image);
     stopCamera();
     analyzePlant(image);
   };
@@ -187,58 +224,71 @@ const Scan = () => {
   const isCameraSupported = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
 
   return (
-    <div className="scan-container">
- 
-      <h1>Scan a Plant</h1>
-      
-      {!isSecure && (
-        <div className="security-warning">
-          <p>⚠️ Camera access requires a secure connection (HTTPS). Please use the upload option below.</p>
-        </div>
-      )}
-
-      {showPermissionHelp && (
-        <div className="permission-help">
-          <h3>🔒 Camera Permission Required</h3>
-          <p>To use the camera, please follow these steps:</p>
-          <ol>
-            <li>Look for a camera icon in your browser's address bar</li>
-            <li>Click on it and select "Allow" for camera access</li>
-            <li>Refresh the page and try again</li>
-          </ol>
-          <p><strong>Alternative:</strong> Use the "Upload Image" button below to select a photo from your device.</p>
+    <div className="camera-app">
+      {/* Top Controls Bar */}
+      <div className="camera-top-controls">
+        <div className="camera-controls-left">
           <button 
-            className="close-help-button"
-            onClick={() => setShowPermissionHelp(false)}
+            className={`camera-control-btn ${flashMode !== 'off' ? 'active' : ''}`}
+            onClick={toggleFlash}
+            title={`Flash: ${flashMode}`}
           >
-            Got it, close this
+            {getFlashIcon()}
+          </button>
+          <button 
+            className={`camera-control-btn ${showGrid ? 'active' : ''}`}
+            onClick={toggleGrid}
+            title="Grid Lines"
+          >
+            #
+          </button>
+          <button 
+            className={`camera-control-btn ${timer > 0 ? 'active' : ''}`}
+            onClick={setTimerMode}
+            title="Timer"
+          >
+            {getTimerText()}
           </button>
         </div>
-      )}
-      
-      <div className="scan-options">
-        <button 
-          className="scan-button"
-          onClick={isCapturing ? stopCamera : startCamera}
-          disabled={!isSecure || !isCameraSupported}
-          title={!isSecure ? 'Camera requires HTTPS' : !isCameraSupported ? 'Camera not supported' : ''}
-        >
-          {isCapturing ? 'Stop Camera' : 'Start Camera'}
-        </button>
         
-        <label className="upload-button">
-          Upload Image
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
-        </label>
+        <div className="camera-controls-right">
+          <button 
+            className="camera-control-btn"
+            onClick={switchCamera}
+            title="Switch Camera"
+          >
+            🔄
+          </button>
+        </div>
       </div>
 
-      <div className="camera-container">
-        {isCapturing && (
+      {/* Camera Modes */}
+      <div className="camera-modes">
+        <div className="mode-selector">
+          <button 
+            className={`mode-btn ${cameraMode === 'normal' ? 'active' : ''}`}
+            onClick={() => setCameraMode('normal')}
+          >
+            NORMAL
+          </button>
+          <button 
+            className={`mode-btn ${cameraMode === 'square' ? 'active' : ''}`}
+            onClick={() => setCameraMode('square')}
+          >
+            SQUARE
+          </button>
+          <button 
+            className={`mode-btn ${cameraMode === 'portrait' ? 'active' : ''}`}
+            onClick={() => setCameraMode('portrait')}
+          >
+            PORTRAIT
+          </button>
+        </div>
+      </div>
+
+      {/* Main Camera View */}
+      <div className={`camera-viewport ${cameraMode}`}>
+        {isCapturing ? (
           <>
             <video
               ref={videoRef}
@@ -246,15 +296,78 @@ const Scan = () => {
               playsInline
               className="camera-feed"
             />
-            <button 
-              className="capture-button"
-              onClick={captureImage}
-            >
-              Capture
-            </button>
+            {showGrid && <div className="camera-grid" />}
           </>
+        ) : (
+          <div className="camera-placeholder">
+            <div className="placeholder-icon">📷</div>
+            <p>Camera Ready</p>
+            {!isSecure && (
+              <div className="security-warning">
+                <p>⚠️ Camera requires HTTPS connection</p>
+              </div>
+            )}
+          </div>
         )}
       </div>
+
+      {/* Bottom Controls */}
+      <div className="camera-bottom-controls">
+        <div className="camera-controls-left">
+          {lastCapturedImage && (
+            <button 
+              className="gallery-preview"
+              onClick={() => setCapturedImage(lastCapturedImage)}
+            >
+              <img src={lastCapturedImage} alt="Last captured" />
+            </button>
+          )}
+        </div>
+
+        <div className="camera-controls-center">
+          <button 
+            className={`capture-btn ${isCapturing ? 'active' : ''}`}
+            onClick={isCapturing ? captureImage : startCamera}
+            disabled={!isSecure || !isCameraSupported}
+          >
+            <div className="capture-btn-inner" />
+          </button>
+        </div>
+
+        <div className="camera-controls-right">
+          <label className="upload-btn">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            📁
+          </label>
+        </div>
+      </div>
+
+      {/* Permission Help Modal */}
+      {showPermissionHelp && (
+        <div className="permission-modal">
+          <div className="permission-content">
+            <h3>🔒 Camera Permission Required</h3>
+            <p>To use the camera, please follow these steps:</p>
+            <ol>
+              <li>Look for a camera icon in your browser's address bar</li>
+              <li>Click on it and select "Allow" for camera access</li>
+              <li>Refresh the page and try again</li>
+            </ol>
+            <p><strong>Alternative:</strong> Use the upload button to select a photo from your device.</p>
+            <button 
+              className="close-help-button"
+              onClick={() => setShowPermissionHelp(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
       {showModal && plantInfo && (
         <motion.div 
