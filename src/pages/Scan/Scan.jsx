@@ -11,7 +11,11 @@ import {
   faSyncAlt,
   faCamera,
   faFolderOpen,
-  faTimes
+  faTimes,
+  faLeaf,
+  faBook,
+  faComments,
+  faHeart
 } from '@fortawesome/free-solid-svg-icons';
 import { addToFavorites } from '../../firebase/favorites';
 import { notificationService } from '../../utils/notificationService';
@@ -32,6 +36,7 @@ const Scan = () => {
   const [lastCapturedImage, setLastCapturedImage] = useState(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+
 
   // Hide bottom navigation when in camera mode
   useEffect(() => {
@@ -176,25 +181,47 @@ const Scan = () => {
   };
 
   const analyzePlant = async (imageData) => {
-    // TODO: Implement API call to plant identification service
-    // For now, we'll use mock data
-    setPlantInfo({
-      name: 'Sample Plant',
-      scientificName: 'Plantus Exampleus',
-      description: 'This is a sample plant description.',
-      careGuide: {
-        water: 'Water twice a week',
-        sunlight: 'Partial shade to full sun',
-        soil: 'Well-draining potting mix',
-        temperature: '65-80°F (18-27°C)'
-      },
-      funFacts: [
-        'This plant is native to various regions.',
-        'It has been used in traditional medicine.',
-        'Can grow up to 2 meters tall.'
-      ]
-    });
-    setShowModal(true);
+    // Show loading state
+    toast.loading('Analyzing plant...', { id: 'plant-analysis' });
+    
+    try {
+      // TODO: Implement API call to plant identification service
+      // For now, we'll use mock data with a small delay to simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const mockPlantInfo = {
+        name: 'Sample Plant',
+        scientificName: 'Plantus Exampleus',
+        description: 'This is a sample plant description that provides information about the identified plant species.',
+        careGuide: {
+          water: 'Water twice a week',
+          sunlight: 'Partial shade to full sun',
+          soil: 'Well-draining potting mix',
+          temperature: '65-80°F (18-27°C)'
+        },
+        funFacts: [
+          'This plant is native to various regions.',
+          'It has been used in traditional medicine.',
+          'Can grow up to 2 meters tall.'
+        ]
+      };
+      
+      setPlantInfo(mockPlantInfo);
+      
+      // Dismiss loading toast
+      toast.dismiss('plant-analysis');
+      
+      // Show success message
+      toast.success('Plant identified successfully!');
+      
+      // Show modal
+      setShowModal(true);
+      
+    } catch (error) {
+      console.error('Error analyzing plant:', error);
+      toast.dismiss('plant-analysis');
+      toast.error('Failed to analyze plant. Please try again.');
+    }
   };
 
   const handleAddToFavorites = async () => {
@@ -268,14 +295,14 @@ const Scan = () => {
           >
             <FontAwesomeIcon icon={faTh} />
           </button>
-          <button 
+        <button 
             className={`camera-control-btn ${timer > 0 ? 'active' : ''}`}
             onClick={setTimerMode}
             title="Timer"
-          >
+        >
             <FontAwesomeIcon icon={faClock} />
             {timer > 0 && <span className="timer-text">{timer}</span>}
-          </button>
+        </button>
         </div>
         
         <div className="camera-controls-right">
@@ -320,17 +347,17 @@ const Scan = () => {
             {showGrid && <div className="camera-grid" />}
           </>
         ) : (
-          <div className="camera-placeholder">
-            <div className="placeholder-icon">
-              <FontAwesomeIcon icon={faCamera} />
-            </div>
-            <p>Camera Ready</p>
-            {!isSecure && (
-              <div className="security-warning">
-                <p>⚠️ Camera requires HTTPS connection</p>
+              <div className="camera-placeholder">
+                <div className="placeholder-icon">
+                  <FontAwesomeIcon icon={faCamera} />
+                </div>
+                <p>Camera Ready</p>
+                {!isSecure && (
+                  <div className="security-warning">
+                    <p>⚠️ Camera requires HTTPS connection</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
         )}
       </div>
 
@@ -399,6 +426,7 @@ const Scan = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           onClick={() => setShowModal(false)}
+          style={{ zIndex: 1000 }}
         >
           <motion.div 
             className="modal-content"
@@ -406,49 +434,108 @@ const Scan = () => {
             animate={{ y: 0, opacity: 1 }}
             onClick={e => e.stopPropagation()}
           >
+            {/* Modal Header */}
+            <div className="modal-header">
+              <h2 className="plant-name">{plantInfo.name}</h2>
             <button 
               className="modal-close"
               onClick={() => setShowModal(false)}
             >
-              <FontAwesomeIcon icon={faTimes} />
+                <FontAwesomeIcon icon={faTimes} />
             </button>
+            </div>
             
-            <div className="plant-info">
+            {/* Plant Image */}
               {capturedImage && (
+              <div className="plant-image-container">
                 <img 
                   src={capturedImage} 
                   alt="Captured plant"
-                  className="captured-image"
+                  className="plant-image"
                 />
-              )}
-              
-              <h2>{plantInfo.name}</h2>
-              <p className="scientific-name">{plantInfo.scientificName}</p>
+              </div>
+            )}
+
+            {/* Plant Details */}
+            <div className="plant-details">
+              <div className="scientific-name">
+                <FontAwesomeIcon icon={faLeaf} />
+                <span>{plantInfo.scientificName}</span>
+              </div>
               <p className="description">{plantInfo.description}</p>
+            </div>
 
-              <div className="care-guide">
-                <h3>Care Guide</h3>
-                <ul>
-                  <li><strong>Water:</strong> {plantInfo.careGuide.water}</li>
-                  <li><strong>Sunlight:</strong> {plantInfo.careGuide.sunlight}</li>
-                  <li><strong>Soil:</strong> {plantInfo.careGuide.soil}</li>
-                  <li><strong>Temperature:</strong> {plantInfo.careGuide.temperature}</li>
-                </ul>
+            {/* Care Guide Cards */}
+            <div className="care-guide-section">
+              <h3 className="section-title">
+                <FontAwesomeIcon icon={faBook} />
+                Care Guide
+              </h3>
+              <div className="care-cards">
+                <div className="care-card">
+                  <div className="care-icon water">
+                    <FontAwesomeIcon icon={faHeart} />
+                  </div>
+                  <div className="care-content">
+                    <h4>Water</h4>
+                    <p>{plantInfo.careGuide.water || 'Regular watering needed'}</p>
+                  </div>
+                </div>
+                <div className="care-card">
+                  <div className="care-icon sunlight">
+                    <FontAwesomeIcon icon={faHeart} />
+                  </div>
+                  <div className="care-content">
+                    <h4>Sunlight</h4>
+                    <p>{plantInfo.careGuide.sunlight || 'Bright indirect light'}</p>
+                  </div>
+                </div>
+                <div className="care-card">
+                  <div className="care-icon soil">
+                    <FontAwesomeIcon icon={faHeart} />
+                  </div>
+                  <div className="care-content">
+                    <h4>Soil</h4>
+                    <p>{plantInfo.careGuide.soil || 'Well-draining potting mix'}</p>
+                  </div>
+                </div>
+                <div className="care-card">
+                  <div className="care-icon temperature">
+                    <FontAwesomeIcon icon={faHeart} />
+                  </div>
+                  <div className="care-content">
+                    <h4>Temperature</h4>
+                    <p>{plantInfo.careGuide.temperature || 'Room temperature'}</p>
+                  </div>
+                </div>
+              </div>
               </div>
 
-              <div className="fun-facts">
-                <h3>Fun Facts</h3>
-                <ul>
+            {/* Fun Facts */}
+            {plantInfo.funFacts && plantInfo.funFacts.length > 0 && (
+              <div className="fun-facts-section">
+                <h3 className="section-title">
+                  <FontAwesomeIcon icon={faComments} />
+                  Fun Facts
+                </h3>
+                <div className="fun-facts-list">
                   {plantInfo.funFacts.map((fact, index) => (
-                    <li key={index}>{fact}</li>
+                    <div key={index} className="fun-fact-item">
+                      <FontAwesomeIcon icon={faLeaf} />
+                      <span>{fact}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
+            )}
 
+            {/* Action Buttons */}
+            <div className="modal-actions">
               <button 
                 className="favorite-button"
                 onClick={handleAddToFavorites}
               >
+                <FontAwesomeIcon icon={faHeart} />
                 Add to Favorites
               </button>
             </div>
