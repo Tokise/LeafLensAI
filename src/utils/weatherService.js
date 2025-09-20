@@ -21,8 +21,9 @@ class WeatherService {
         try {
             await this.updateLocation();
             this.startWeatherUpdates();
+            console.log('Weather service initialized successfully');
         } catch (error) {
-            console.error('Failed to initialize weather service:', error);
+            console.warn('Weather service initialization completed with warnings:', error.message);
         }
     }
 
@@ -35,15 +36,25 @@ class WeatherService {
                             lat: position.coords.latitude,
                             lon: position.coords.longitude
                         };
+                        console.log('Location updated successfully:', this.currentLocation);
                         resolve(this.currentLocation);
                     },
                     error => {
-                        console.error('Error getting location:', error);
-                        reject(error);
+                        console.warn('Geolocation access denied or failed:', error.message);
+                        // Don't reject, just log the warning and continue without location
+                        this.currentLocation = null;
+                        resolve(null);
+                    },
+                    {
+                        timeout: 10000,
+                        enableHighAccuracy: false,
+                        maximumAge: 300000 // 5 minutes
                     }
                 );
             } else {
-                reject(new Error('Geolocation is not supported by this browser.'));
+                console.warn('Geolocation is not supported by this browser.');
+                this.currentLocation = null;
+                resolve(null);
             }
         });
     }
