@@ -15,15 +15,52 @@ const Scan = () => {
 
   const startCamera = async () => {
     try {
+      // Check if we're on HTTPS or localhost
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+      if (!isSecure) {
+        throw new Error('Camera access requires HTTPS. Please use a secure connection.');
+      }
+
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera access is not supported in this browser.');
+      }
+
+      // Request camera permission with better constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
+      
       videoRef.current.srcObject = stream;
       streamRef.current = stream;
       setIsCapturing(true);
+      toast.success('Camera started successfully!');
     } catch (error) {
       console.error('Error accessing camera:', error);
-      alert('Unable to access camera. Please make sure you have granted camera permissions.');
+      
+      let errorMessage = 'Unable to access camera. ';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage += 'Please allow camera permissions in your browser settings and try again.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage += 'No camera found. Please connect a camera and try again.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage += 'Camera is already in use by another application.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage += 'Camera constraints cannot be satisfied.';
+      } else if (error.name === 'SecurityError') {
+        errorMessage += 'Camera access blocked due to security restrictions.';
+      } else if (error.message.includes('HTTPS')) {
+        errorMessage = error.message;
+      } else {
+        errorMessage += 'Please check your camera permissions and try again.';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -117,15 +154,27 @@ const Scan = () => {
     }
   };
 
+  // Check if camera is supported and secure
+  const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+  const isCameraSupported = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+
   return (
     <div className="scan-container">
  
       <h1>Scan a Plant</h1>
       
+      {!isSecure && (
+        <div className="security-warning">
+          <p>⚠️ Camera access requires a secure connection (HTTPS). Please use the upload option below.</p>
+        </div>
+      )}
+      
       <div className="scan-options">
         <button 
           className="scan-button"
           onClick={isCapturing ? stopCamera : startCamera}
+          disabled={!isSecure || !isCameraSupported}
+          title={!isSecure ? 'Camera requires HTTPS' : !isCameraSupported ? 'Camera not supported' : ''}
         >
           {isCapturing ? 'Stop Camera' : 'Start Camera'}
         </button>

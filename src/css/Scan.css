@@ -31,10 +31,31 @@
   font-weight: 500;
 }
 
-.scan-button:hover,
+.scan-button:hover:not(:disabled),
 .upload-button:hover {
   background-color: #224b23;
   transform: translateY(-2px);
+}
+
+.scan-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.security-warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.security-warning p {
+  margin: 0;
+  color: #856404;
+  font-weight: 500;
 }
 
 .camera-container {
