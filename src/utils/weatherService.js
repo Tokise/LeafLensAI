@@ -21,9 +21,8 @@ class WeatherService {
         try {
             await this.updateLocation();
             this.startWeatherUpdates();
-            console.log('Weather service initialized successfully');
         } catch (error) {
-            console.warn('Weather service initialization completed with warnings:', error.message);
+            console.error('Failed to initialize weather service:', error);
         }
     }
 
@@ -36,25 +35,15 @@ class WeatherService {
                             lat: position.coords.latitude,
                             lon: position.coords.longitude
                         };
-                        console.log('Location updated successfully:', this.currentLocation);
                         resolve(this.currentLocation);
                     },
                     error => {
-                        console.warn('Geolocation access denied or failed:', error.message);
-                        // Don't reject, just log the warning and continue without location
-                        this.currentLocation = null;
-                        resolve(null);
-                    },
-                    {
-                        timeout: 10000,
-                        enableHighAccuracy: false,
-                        maximumAge: 300000 // 5 minutes
+                        console.error('Error getting location:', error);
+                        reject(error);
                     }
                 );
             } else {
-                console.warn('Geolocation is not supported by this browser.');
-                this.currentLocation = null;
-                resolve(null);
+                reject(new Error('Geolocation is not supported by this browser.'));
             }
         });
     }
@@ -62,12 +51,6 @@ class WeatherService {
     async getWeather() {
         if (!this.currentLocation) {
             await this.updateLocation();
-        }
-
-        // If we still don't have location after trying to update, use a default location
-        if (!this.currentLocation) {
-            console.warn('Location not available, using default location (New York)');
-            this.currentLocation = { lat: 40.7128, lon: -74.0060 }; // New York City as default
         }
 
         try {
@@ -93,9 +76,6 @@ class WeatherService {
                 humidity: data.main.humidity,
                 windSpeed: data.wind.speed,
                 icon: this.getWeatherIcon(data.weather[0].icon),
-                location: data.name,
-                country: data.sys.country,
-                isDefaultLocation: !this.currentLocation || (this.currentLocation.lat === 40.7128 && this.currentLocation.lon === -74.0060),
                 dedupeKey
             };
         } catch (error) {
@@ -138,22 +118,14 @@ class WeatherService {
         this.weatherUpdateInterval = setInterval(async () => {
             try {
                 const weatherData = await this.getWeather();
-                if (weatherData) {
-                    this.notifyWeatherUpdate(weatherData);
-                }
+                this.notifyWeatherUpdate(weatherData);
             } catch (error) {
                 console.error('Failed to update weather:', error);
             }
         }, 30 * 60 * 1000); // 30 minutes
 
         // Trigger initial update
-        this.getWeather().then(weatherData => {
-            if (weatherData) {
-                this.notifyWeatherUpdate(weatherData);
-            }
-        }).catch(error => {
-            console.warn('Initial weather update failed:', error.message);
-        });
+        this.getWeather().then(weatherData => this.notifyWeatherUpdate(weatherData));
     }
 
     stopWeatherUpdates() {
@@ -167,28 +139,13 @@ class WeatherService {
         }
     }
 
-    // Method to manually set location
-    setLocation(lat, lon) {
-        this.currentLocation = { lat, lon };
-        console.log('Location manually set to:', this.currentLocation);
-        // Trigger immediate weather update
-        this.getWeather().then(weatherData => {
-            if (weatherData) {
-                this.notifyWeatherUpdate(weatherData);
-            }
-        }).catch(error => {
-            console.warn('Failed to get weather for manual location:', error.message);
-        });
-    }
-
     notifyWeatherUpdate(weatherData) {
         // Pass dedupe key into notification to avoid duplicates across reloads within the same hour
-        const locationText = weatherData.isDefaultLocation ? ' (Default Location)' : ` in ${weatherData.location}`;
         notificationService.addNotification({
             type: 'in-app',
             category: 'weather',
             title: 'Weather Update',
-            message: `Current weather${locationText}: ${weatherData.condition}, ${weatherData.temperature}°C`,
+            message: `Current weather: ${weatherData.condition}, ${weatherData.temperature}°C`,
             icon: '🌤️',
             data: weatherData,
             key: weatherData.dedupeKey
