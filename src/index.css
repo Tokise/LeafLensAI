@@ -109,3 +109,7 @@ a {
 a:hover {
   color: var(--primary-color);
 }
+
+.hide-bottom-nav .bottom-navbar {
+  display: none !important;
+}
